@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,25 +39,31 @@ import com.example.listcompose.R
 import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.listcompose.ui.screen.HeaderScreen
 import timber.log.Timber
 
 @Composable
 fun DetailScreen(
     filmId: Int,
-    navController: NavController,
-    viewModel: DetailViewModel
+    navController: NavController
 ) {
     val context = LocalContext.current
-    val films by viewModel.films.collectAsStateWithLifecycle()
-    val film = remember (films) {
-        viewModel.getFilmById(filmId)
-    }
+
+    val factory = DetailViewModelFactory(
+        context = context,
+        filmId = filmId,
+        pageInfo = stringResource(R.string.detailpage)
+    )
+
+    val viewModel: DetailViewModel = viewModel(factory = factory)
+    val film by viewModel.film.collectAsStateWithLifecycle()
 
     LaunchedEffect(film) {
-        film?.let{
-            Timber.d("Menampilkan Data Detail dari Film: ${context.getString(it.title)}")
+        film?.let {
+            Timber.d("Menampilkan Data Detail dari Film: ${it.title}")
         }
     }
 
@@ -74,7 +81,54 @@ fun DetailScreen(
             )
         }
     ) { innerPadding ->
-        if (film != null) {
+        val currentFilm = film
+
+        if(currentFilm != null){
+            val synopsisRes = when (currentFilm.id) {
+                274 -> R.string.synopsis_f01
+                812583 -> R.string.synopsis_f05
+                687163 -> R.string.synopsis_f03
+                1393326 -> R.string.synopsis_f02
+                1310741 -> R.string.synopsis_f04
+                else -> R.string.errormsg
+            }
+
+            val scoreRes = when (currentFilm.id) {
+                274 -> R.string.score_f01
+                812583 -> R.string.score_f05
+                687163 -> R.string.score_f03
+                1393326 -> R.string.score_f02
+                1310741 -> R.string.score_f04
+                else -> R.string.app_name
+            }
+
+            val reviewRes = when (currentFilm.id) {
+                274 -> R.string.review_f01
+                812583 -> R.string.review_f05
+                687163 -> R.string.review_f03
+                1393326 -> R.string.review_f02
+                1310741 -> R.string.review_f04
+                else -> R.string.errormsg
+            }
+
+            val bigImageRes = when (currentFilm.id) {
+                274 -> R.drawable.sotl2
+                812583 -> R.drawable.wudm2
+                687163 -> R.drawable.phm2
+                1393326 -> R.drawable.gitc2
+                1310741 -> R.drawable.sktp2
+                else -> R.drawable.ic_launcher_background
+            }
+
+            val imageRes = when (currentFilm.id) {
+                274 -> R.drawable.sotl
+                812583 -> R.drawable.wudm
+                687163 -> R.drawable.phm
+                1393326 -> R.drawable.gitc
+                1310741 -> R.drawable.sktp
+                else -> R.drawable.ic_launcher_background
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -82,7 +136,7 @@ fun DetailScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 Image(
-                    painter = painterResource(id = film.bigImageId),
+                    painter = painterResource(id = bigImageRes),
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -96,13 +150,24 @@ fun DetailScreen(
                         verticalAlignment = Alignment.Bottom
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
+
                             Text(
-                                text = stringResource(id = film.title),
+                                text = currentFilm.title,
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
                             Text(
-                                text = stringResource(id = film.synopsis),
+                                text = "Release Date: ${currentFilm.releaseDate}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = stringResource(id = synopsisRes),
                                 style = MaterialTheme.typography.bodyMedium,
                                 lineHeight = 20.sp
                             )
@@ -111,7 +176,7 @@ fun DetailScreen(
                         Spacer(modifier = Modifier.width(12.dp))
 
                         Image(
-                            painter = painterResource(id = film.imageId),
+                            painter = painterResource(id = imageRes),
                             contentDescription = null,
                             modifier = Modifier
                                 .size(width = 120.dp, height = 180.dp)
@@ -124,7 +189,7 @@ fun DetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "${stringResource(id = R.string.rating)} ${stringResource(id = film.score)}",
+                        text = "${stringResource(id = R.string.rating)} ${stringResource(id = scoreRes)}",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
 
@@ -142,7 +207,7 @@ fun DetailScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = stringResource(id = film.review),
+                                text = stringResource(id = reviewRes),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -151,9 +216,12 @@ fun DetailScreen(
             }
         } else {
             Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center) {
-                Text(text = stringResource(id = R.string.errormsg))
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
         }
     }

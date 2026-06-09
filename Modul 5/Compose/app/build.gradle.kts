@@ -3,6 +3,9 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt")
+    alias(libs.plugins.kotlin.android)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
 }
 
 android {
@@ -29,7 +32,7 @@ android {
         }
         val tmdbKey:String = localProperties.getProperty("TMDB_API_KEY") ?: ""
 
-        buildConfigField("String", "TMDB_API_KEY", "\"$tmdbKey\"")
+        resValue("string", "TMDB_API_KEY", tmdbKey)
     }
 
     buildTypes {
@@ -47,7 +50,10 @@ android {
     }
     buildFeatures {
         compose = true
-
+        resValues = true
+    }
+    kotlinOptions {
+        jvmTarget = "11"
     }
 }
 
@@ -64,6 +70,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
+    implementation(libs.core.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -78,8 +85,13 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
 
-    val roomVersion = "2.6.1"
-    implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-runtime:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.4")
+    kapt("androidx.room:room-compiler:2.8.4")
+
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+}
+
+fun kapt(string: String) {
+    TODO("Not yet implemented")
 }

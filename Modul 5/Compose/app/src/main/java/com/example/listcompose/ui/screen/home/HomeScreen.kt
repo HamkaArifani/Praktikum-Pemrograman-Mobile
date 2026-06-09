@@ -44,18 +44,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.listcompose.domain.model.Film
 import com.example.listcompose.ui.screen.HeaderScreen
 import timber.log.Timber
 
-
+private const val TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel
 ) {
     val context=LocalContext.current
+    val factory= HomeViewModelFactory(
+        context = context,
+        pageInfo = stringResource(R.string.homepage)
+    )
+    val viewModel: HomeViewModel = viewModel(factory = factory)
+
     val films by viewModel.films.collectAsStateWithLifecycle()
 
     LaunchedEffect(films) {
@@ -103,15 +110,45 @@ fun HomeScreen(
             }
 
             items(films) { film ->
+
+                val synopsisRes = when (film.id) {
+                    274 -> R.string.synopsis_f01
+                    812583 -> R.string.synopsis_f05
+                    687163 -> R.string.synopsis_f03
+                    1393326 -> R.string.synopsis_f02
+                    1310741 -> R.string.synopsis_f04
+                    else -> R.string.errormsg
+                }
+
+                val scoreRes = when (film.id) {
+                    274 -> R.string.score_f01
+                    812583 -> R.string.score_f05
+                    687163 -> R.string.score_f03
+                    1393326 -> R.string.score_f02
+                    1310741 -> R.string.score_f04
+                    else -> R.string.app_name
+                }
+
+                val imdbRes = when (film.id) {
+                    274 -> R.string.imdb_f01
+                    812583 -> R.string.imdb_f05
+                    687163 -> R.string.imdb_f03
+                    1393326 -> R.string.imdb_f02
+                    1310741 -> R.string.imdb_f04
+                    else -> R.string.app_name
+                }
+
                 MovieItem(
                     film = film,
+                    synopsisRes = synopsisRes,
+                    scoreRes = scoreRes,
                     onDetailClick = {
-                        Timber.d("Tombol Detail dari Film : ${context.getString(film.title)} Ditekan")
+                        Timber.d("Tombol Detail dari Film : ${film.title} Ditekan")
                         navController.navigate("detail/${film.id}")
                     },
                     onIMDBClick = {
-                        Timber.d("Tombol IMDB dari Film : ${context.getString(film.title)} Ditekan")
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(film.imdbUrl)))
+                        Timber.d("Tombol IMDB dari Film : ${film.title} Ditekan")
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(imdbRes)))
                         context.startActivity(intent)
                     }
                 )
@@ -122,6 +159,14 @@ fun HomeScreen(
 
 @Composable
 fun HighlightCard(film : Film) {
+    val bigImageRes = when(film.id){
+        274-> R.drawable.sotl
+        812583 -> R.drawable.wudm
+        687163 -> R.drawable.phm
+        1393326 -> R.drawable.gitc
+        1310741 -> R.drawable.sktp
+        else -> R.drawable.ic_launcher_background
+    }
     Card(
         modifier = Modifier
             .width(280.dp)
@@ -129,7 +174,7 @@ fun HighlightCard(film : Film) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Image(
-            painter = painterResource(id = film.imageId),
+            painter = painterResource(id = bigImageRes),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -140,6 +185,8 @@ fun HighlightCard(film : Film) {
 @Composable
 fun MovieItem(
     film: Film,
+    synopsisRes: Int,
+    scoreRes: Int,
     onDetailClick: () -> Unit,
     onIMDBClick: () -> Unit
 ) {
@@ -155,9 +202,11 @@ fun MovieItem(
                 .padding(12.dp)
                 .fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(id = film.imageId),
-                contentDescription = null,
+            AsyncImage(
+                model = "$TMDB_IMAGE_BASE_URL${film.posterPath}",
+                contentDescription = "Poster ${film.title}",
+                placeholder = painterResource(R.drawable.ic_launcher_background),
+                error = painterResource(R.drawable.ic_launcher_background),
                 modifier = Modifier
                     .size(width = 110.dp, height = 160.dp)
                     .clip(RoundedCornerShape(12.dp)),
@@ -170,14 +219,22 @@ fun MovieItem(
                     .weight(1f)
             ) {
                 Text(
-                    text = stringResource(film.title),
+                    text = film.title,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
+                Spacer(modifier = Modifier.height(2.dp))
+
                 Text(
-                    text = stringResource(film.synopsis),
+                    text = "Release Date: ${film.releaseDate}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+
+                Text(
+                    text = stringResource(synopsisRes),
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
@@ -191,7 +248,7 @@ fun MovieItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = stringResource(film.score),
+                        text = stringResource(scoreRes),
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                         color = Color.DarkGray
                     )

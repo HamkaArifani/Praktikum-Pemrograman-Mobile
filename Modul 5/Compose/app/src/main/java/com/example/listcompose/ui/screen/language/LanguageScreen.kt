@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.listcompose.R
@@ -22,16 +23,16 @@ import com.example.listcompose.ui.screen.HeaderScreen
 fun LanguageScreen(navController: NavController) {
     val context = LocalContext.current
 
-    val factory = LanguageViewModelFactory(stringResource(R.string.languagepage))
+    val factory = LanguageViewModelFactory(
+        context = context,
+        pageInfo = stringResource(R.string.languagepage)
+    )
     val viewModel : LanguageViewModel = viewModel(factory = factory)
+
+    val selectedOption by viewModel.selectedOption.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         Toast.makeText(context, viewModel.pageInfo, Toast.LENGTH_LONG).show()
-    }
-    val currentLocale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-
-    var selectedOption by remember {
-        mutableStateOf(if (currentLocale.contains("in")) "Bahasa" else "English")
     }
 
     Scaffold(
@@ -53,21 +54,13 @@ fun LanguageScreen(navController: NavController) {
             LanguageOption(
                 label = stringResource(R.string.english),
                 selected = (selectedOption == "English"),
-                onClick = {
-                    selectedOption = "English"
-                    val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("en")
-                    AppCompatDelegate.setApplicationLocales(appLocale)
-                }
+                onClick = { viewModel.selectLanguage("English") }
             )
 
             LanguageOption(
                 label = stringResource(R.string.indonesia),
                 selected = (selectedOption == "Bahasa"),
-                onClick = {
-                    selectedOption = "Bahasa"
-                    val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags("in")
-                    AppCompatDelegate.setApplicationLocales(appLocale)
-                }
+                onClick = { viewModel.selectLanguage("Bahasa") }
             )
         }
     }

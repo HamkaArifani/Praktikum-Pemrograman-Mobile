@@ -8,7 +8,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.listcompose.data.DataSource
 import com.example.listcompose.ui.screen.detail.DetailScreen
 import com.example.listcompose.ui.screen.home.HomeScreen
 import com.example.listcompose.ui.screen.language.LanguageScreen
@@ -28,9 +27,7 @@ fun Nav_Graph(
         startDestination = startDestination
     ) {
         composable("home") {
-            val factory = HomeViewModelFactory(DataSource(), stringResource(R.string.homepage))
-            val viewModel : HomeViewModel = viewModel(factory = factory)
-            HomeScreen(navController = navController, viewModel = viewModel)
+            HomeScreen(navController = navController)
         }
 
         composable(
@@ -39,11 +36,8 @@ fun Nav_Graph(
         ) { backStackEntry ->
             val filmId = backStackEntry.arguments?.getInt("filmId") ?: 0
 
-            val factory = DetailViewModelFactory(DataSource(), filmId, stringResource(R.string.detailpage))
-            val viewModel : DetailViewModel = viewModel(factory = factory)
             DetailScreen(
                 filmId = filmId,
-                viewModel = viewModel,
                 navController = navController
             )
         }
